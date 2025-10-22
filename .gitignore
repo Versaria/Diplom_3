@@ -1,0 +1,78 @@
+# Build output
+target/
+build/
+out/
+*.jar
+*.war
+*.ear
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+
+# Eclipse
+.settings/
+.project
+.classpath
+bin/
+
+# NetBeans
+nbproject/
+nb-configuration.xml
+
+# Log files
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Maven
+pom.xml.versionsBackup
+dependency-reduced-pom.xml
+
+# Allure reports
+allure-results/
+allure-report/
+.allure/
+
+# Test reports
+surefire-reports/
+failsafe-reports/
+test-results/
+
+# Temporary files
+*.tmp
+*.temp
+
+# System files
+*.orig
+*.bak
+
+# Environment variables
+.env
+*.env
+
+# API keys and secrets
+*credentials*
+*config*
+*password*
+*secret*
+
+# WebDriver binaries
+*.exe
+webdrivers/
+
+# Yandex Driver
+yandexdriver.exe
