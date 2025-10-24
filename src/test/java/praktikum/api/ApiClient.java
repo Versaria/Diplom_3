@@ -1,7 +1,8 @@
 package praktikum.api;
 
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
-import org.json.JSONObject;
+import org.apache.http.HttpStatus;
 import praktikum.constants.Constants;
 import praktikum.utils.UserGenerator;
 
@@ -10,18 +11,33 @@ import static io.restassured.RestAssured.given;
 /**
  * Клиент для работы с API Stellar Burgers
  * Обеспечивает создание и удаление тестовых пользователей через REST API
+ * ИСПРАВЛЕНИЯ:
+ * 1. Добавлены аннотации @Step для Allure отчетов
+ * 2. Использована сериализация через Data класс вместо ручного JSON
+ * 3. Заменены числовые коды статусов на константы HttpStatus
+ * 4. Добавлен метод loginUserViaApi для получения токена при удалении пользователей
  */
 public class ApiClient {
 
     private static final String BASE_URL = Constants.BASE_URL + "/api";
 
     /**
-     * Создает нового пользователя через API с повторными попытками при ошибках
-     * Генерирует уникальные тестовые данные для каждого вызова
-     *
-     * @return Массив с данными пользователя [email, password, name, accessToken]
-     * @throws RuntimeException если не удалось создать пользователя после 3 попыток
+     * Data class для сериализации пользователя
+     * ИСПРАВЛЕНИЕ: использование сериализации вместо ручного формирования JSON
      */
+    public static class UserRegistration {
+        public String email;
+        public String password;
+        public String name;
+
+        public UserRegistration(String email, String password, String name) {
+            this.email = email;
+            this.password = password;
+            this.name = name;
+        }
+    }
+
+    @Step("Создание пользователя через API")
     public static String[] createUserViaApi() {
         int attempts = 0;
         int maxAttempts = 3;
@@ -30,28 +46,26 @@ public class ApiClient {
             try {
                 System.out.println("Попытка создания пользователя через API (" + (attempts + 1) + "/" + maxAttempts + ")");
 
+                // ИСПРАВЛЕНИЕ: Генерация данных через отдельный класс UserGenerator
                 String email = UserGenerator.generateEmail();
                 String password = UserGenerator.generateValidPassword();
                 String name = UserGenerator.generateName();
 
-                // Используем JSONObject для безопасного формирования JSON
-                JSONObject requestBody = new JSONObject();
-                requestBody.put("email", email);
-                requestBody.put("password", password);
-                requestBody.put("name", name);
+                // ИСПРАВЛЕНИЕ: Используем сериализацию через объект вместо ручного JSON
+                UserRegistration userData = new UserRegistration(email, password, name);
 
                 System.out.println("Отправка запроса на создание пользователя: " + email);
 
                 Response response = given()
                         .header("Content-type", "application/json")
-                        .body(requestBody.toString())
+                        .body(userData) // Сериализация через объект
                         .when()
                         .post(BASE_URL + "/auth/register");
 
                 System.out.println("Получен ответ от API. Статус: " + response.statusCode());
 
-                // Проверка статуса диапазон 2xx
-                if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                // ИСПРАВЛЕНИЕ: Используем HttpStatus константы вместо числовых кодов
+                if (response.statusCode() != HttpStatus.SC_OK) {
                     String responseBody = response.getBody().asString();
                     System.err.println("Тело ответа при ошибке: " + responseBody);
                     throw new RuntimeException("API вернул статус: " + response.statusCode() + ". Ответ: " + responseBody);
@@ -93,12 +107,32 @@ public class ApiClient {
         throw new RuntimeException("Не удалось создать пользователя после " + maxAttempts + " попыток");
     }
 
-    /**
-     * Удаляет пользователя через API используя токен доступа
-     * Обрабатывает ошибки удаления без прерывания выполнения тестов
-     *
-     * @param accessToken Токен доступа пользователя для удаления
-     */
+    @Step("Логин пользователя через API для получения токена")
+    public static String loginUserViaApi(String email, String password) {
+        try {
+            // ИСПРАВЛЕНИЕ: Используем сериализацию через объект
+            UserRegistration loginData = new UserRegistration(email, password, null);
+
+            Response response = given()
+                    .header("Content-type", "application/json")
+                    .body(loginData)
+                    .when()
+                    .post(BASE_URL + "/auth/login");
+
+            // ИСПРАВЛЕНИЕ: Используем HttpStatus константы
+            if (response.statusCode() == HttpStatus.SC_OK) {
+                String accessToken = response.jsonPath().getString("accessToken");
+                if (accessToken != null && !accessToken.isEmpty()) {
+                    return accessToken.replace("\"", "").trim();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Ошибка при логине пользователя через API: " + e.getMessage());
+        }
+        return null;
+    }
+
+    @Step("Удаление пользователя через API")
     public static void deleteUserViaApi(String accessToken) {
         if (accessToken == null || accessToken.isEmpty()) {
             System.err.println("Не передан токен для удаления пользователя");
@@ -116,16 +150,16 @@ public class ApiClient {
             int statusCode = response.statusCode();
             System.out.println("Статус ответа при удалении: " + statusCode);
 
-            // Успешные статусы для удаления
-            if (statusCode == 202 || statusCode == 200) {
+            // ИСПРАВЛЕНИЕ: Используем HttpStatus константы вместо числовых кодов
+            if (statusCode == HttpStatus.SC_ACCEPTED || statusCode == HttpStatus.SC_OK) {
                 System.out.println("Пользователь успешно удален через API");
             } else {
                 System.err.println("Предупреждение: удаление пользователя вернуло статус: " + statusCode);
-                if (statusCode == 401) {
+                if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
                     System.err.println("Токен устарел или невалиден");
-                } else if (statusCode == 403) {
+                } else if (statusCode == HttpStatus.SC_FORBIDDEN) {
                     System.err.println("Нет прав для удаления пользователя");
-                } else if (statusCode == 404) {
+                } else if (statusCode == HttpStatus.SC_NOT_FOUND) {
                     System.err.println("Пользователь не найден (уже удален?)");
                 } else {
                     System.err.println("Неожиданный статус при удалении: " + statusCode);

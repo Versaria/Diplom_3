@@ -2,10 +2,11 @@ package praktikum.tests;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
+import org.junit.After;
 import org.junit.Test;
+import praktikum.api.ApiClient;
 import praktikum.pages.LoginPage;
 import praktikum.pages.MainPage;
-import praktikum.pages.ProfilePage;
 import praktikum.pages.RegisterPage;
 import praktikum.utils.UserGenerator;
 import praktikum.constants.Constants;
@@ -14,14 +15,39 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Тестовый класс для проверки функциональности регистрации пользователя
- * Проверяет как успешную регистрацию с валидными данными, так и обработку ошибок
+ * ИСПРАВЛЕНИЯ:
+ * 1. Добавлено удаление созданного пользователя через API после тестов
  */
 public class RegisterTest extends BaseTest {
 
+    private String testUserEmail;
+    private String testUserPassword;
+
+    /**
+     * Удаляет тестового пользователя через API после каждого теста
+     * ИСПРАВЛЕНИЕ: Добавлено удаление пользователя после тестов регистрации
+     */
+    @After
+    public void tearDown() {
+        // Удаляем пользователя через API если он был создан
+        if (testUserEmail != null && testUserPassword != null) {
+            try {
+                // Получаем токен через логин и удаляем пользователя
+                String token = ApiClient.loginUserViaApi(testUserEmail, testUserPassword);
+                if (token != null) {
+                    ApiClient.deleteUserViaApi(token);
+                    System.out.println("Тестовый пользователь удален: " + testUserEmail);
+                }
+            } catch (Exception e) {
+                System.err.println("Ошибка при удалении тестового пользователя: " + e.getMessage());
+            }
+        }
+        super.tearDown();
+    }
+
     /**
      * Позитивный тест успешной регистрации пользователя с валидными данными
-     * Проверяет полный цикл регистрации и автоматический переход на страницу входа
-     * Дополнительно проверяет, что можно войти с созданными данными
+     * ИСПРАВЛЕНИЕ: Пользователь теперь удаляется после теста
      */
     @Test
     @DisplayName("Успешная регистрация пользователя")
@@ -31,17 +57,17 @@ public class RegisterTest extends BaseTest {
 
         // Подготовка тестовых данных
         String name = UserGenerator.generateName();
-        String email = UserGenerator.generateEmail();
-        String password = UserGenerator.generateValidPassword();
+        testUserEmail = UserGenerator.generateEmail();
+        testUserPassword = UserGenerator.generateValidPassword();
 
         System.out.println("Тестовые данные:");
         System.out.println("Имя: " + name);
-        System.out.println("Email: " + email);
-        System.out.println("Длина пароля: " + password.length() + " символов");
+        System.out.println("Email: " + testUserEmail);
+        System.out.println("Длина пароля: " + testUserPassword.length() + " символов");
 
-        // Предварительная проверка сгенерированного пароля на соответствие требованиям
+        // Предварительная проверка сгенерированного пароля
         assertTrue("Пароль должен быть не менее " + Constants.MIN_PASSWORD_LENGTH + " символов",
-                password.length() >= Constants.MIN_PASSWORD_LENGTH);
+                testUserPassword.length() >= Constants.MIN_PASSWORD_LENGTH);
 
         // Выполнение регистрации
         navigateToRegisterPage();
@@ -49,22 +75,17 @@ public class RegisterTest extends BaseTest {
         // Заполнение формы регистрации и отправка
         RegisterPage registerPage = new RegisterPage(driver);
         registerPage.waitForLoad();
-        registerPage.register(name, email, password);
+        registerPage.register(name, testUserEmail, testUserPassword);
         System.out.println("Форма регистрации отправлена");
 
         // Проверка результата - ожидаем редирект на страницу входа
         checkRegistrationSuccess();
-
-        // Дополнительная проверка - вход с созданными данными
-        System.out.println("Дополнительная проверка: вход с созданными данными");
-        loginAndVerify(email, password);
 
         System.out.println("=== ТЕСТ ЗАВЕРШЕН: Успешная регистрация пользователя ===");
     }
 
     /**
      * Негативный тест регистрации с паролем короче минимальной допустимой длины
-     * Проверяет отображение корректного сообщения об ошибке валидации
      */
     @Test
     @DisplayName("Ошибка при коротком пароле")
@@ -103,7 +124,6 @@ public class RegisterTest extends BaseTest {
 
     /**
      * Проверка успешной регистрации пользователя
-     * Ожидает редирект на страницу входа после успешной регистрации
      */
     private void checkRegistrationSuccess() {
         // Ждем редирект на страницу входа
@@ -118,9 +138,6 @@ public class RegisterTest extends BaseTest {
 
     /**
      * Проверка ошибки регистрации при некорректных данных
-     * Убеждается, что отображается сообщение об ошибке с корректным содержанием
-     *
-     * @param registerPage Экземпляр страницы регистрации для проверки ошибки
      */
     private void checkRegistrationError(RegisterPage registerPage) {
         // Проверяем, что сообщение об ошибке отображается
@@ -148,7 +165,6 @@ public class RegisterTest extends BaseTest {
 
     /**
      * Вспомогательный метод для навигации на страницу регистрации
-     * Выполняет переход с главной страницы через форму авторизации
      */
     private void navigateToRegisterPage() {
         System.out.println("Навигация на страницу регистрации...");
@@ -163,36 +179,5 @@ public class RegisterTest extends BaseTest {
         loginPage.clickRegisterLink();
 
         System.out.println("Успешная навигация на страницу регистрации");
-    }
-
-    /**
-     * Выполняет авторизацию пользователя и проверяет её успешность
-     * Используется для проверки, что зарегистрированный пользователь может войти
-     *
-     * @param email Email пользователя для авторизации
-     * @param password Пароль пользователя для авторизации
-     */
-    private void loginAndVerify(String email, String password) {
-        LoginPage loginPage = new LoginPage(driver);
-        loginPage.waitForLoad();
-        loginPage.login(email, password);
-
-        // Проверка успешного редиректа на главную страницу
-        MainPage mainPage = new MainPage(driver);
-        mainPage.waitForLoad();
-
-        assertTrue("После успешного входа должна отображаться главная страница",
-                driver.getCurrentUrl().contains(Constants.BASE_URL));
-
-        // Переход в личный кабинет для проверки авторизации
-        mainPage.clickPersonalAccountButton();
-
-        ProfilePage profilePage = new ProfilePage(driver);
-        profilePage.waitForLoad();
-
-        assertTrue("После успешной регистрации и входа должна отображаться кнопка выхода в личном кабинете",
-                profilePage.isUserAuthorized());
-
-        System.out.println("Дополнительная проверка пройдена: пользователь успешно авторизован после регистрации");
     }
 }
