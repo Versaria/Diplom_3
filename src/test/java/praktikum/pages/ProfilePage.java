@@ -1,5 +1,6 @@
 package praktikum.pages;
 
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import praktikum.constants.Constants;
@@ -27,40 +28,24 @@ public class ProfilePage extends BasePage {
 
     // Методы проверки состояния
 
-    /**
-     * Ожидает полной загрузки страницы личного кабинета
-     * Проверяет видимость ссылки "Профиль" как индикатора готовности страницы
-     */
+    @Step("Ожидание загрузки страницы личного кабинета")
     public void waitForLoad() {
         waitForElement(profileLink);
     }
 
-    /**
-     * Проверяет видимость кнопки "Выход" на странице
-     * Кнопка выхода отображается только для авторизованных пользователей
-     *
-     * @return true если кнопка выхода видима, иначе false
-     */
+    @Step("Проверка видимости кнопки 'Выход'")
     public boolean isLogoutButtonVisible() {
         return isElementVisible(logoutButton);
     }
 
-    /**
-     * Проверяет, что пользователь успешно авторизован в системе
-     * Основной критерий авторизации - наличие кнопки выхода в личном кабинете
-     *
-     * @return true если пользователь авторизован, иначе false
-     */
+    @Step("Проверка авторизации пользователя")
     public boolean isUserAuthorized() {
         return isLogoutButtonVisible();
     }
 
     // Методы взаимодействия
 
-    /**
-     * Выполняет клик по кнопке "Выход" для завершения сессии пользователя
-     * Используется в тестах выхода из аккаунта
-     */
+    @Step("Клик по кнопке 'Выход'")
     public void clickLogoutButton() {
         System.out.println("Клик по кнопке выхода из аккаунта");
         click(logoutButton);

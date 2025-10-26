@@ -1,5 +1,6 @@
 package praktikum.pages;
 
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import praktikum.constants.Constants;
@@ -30,18 +31,12 @@ public class ForgotPasswordPage extends BasePage {
 
     // Основные действия на странице
 
-    /**
-     * Кликает по ссылке "Войти" для возврата на страницу авторизации
-     * Используется в тестах навигации между формами аутентификации
-     */
+    @Step("Клик по ссылке 'Войти' на странице восстановления пароля")
     public void clickLoginLink() {
         click(loginLink);
     }
 
-    /**
-     * Ожидает полной загрузки страницы восстановления пароля
-     * Проверяет видимость ссылки "Войти" как индикатора готовности страницы
-     */
+    @Step("Ожидание загрузки страницы восстановления пароля")
     public void waitForLoad() {
         waitForElement(loginLink);
     }

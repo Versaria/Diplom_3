@@ -1,5 +1,6 @@
 package praktikum.pages;
 
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import praktikum.constants.Constants;
@@ -35,60 +36,36 @@ public class RegisterPage extends BasePage {
 
     // Методы для заполнения формы
 
-    /**
-     * Заполняет поле "Имя" в форме регистрации
-     *
-     * @param name Полное имя пользователя для регистрации
-     */
+    @Step("Заполнение поля 'Имя': {name}")
     public void setName(String name) {
         setField(nameField, name);
     }
 
-    /**
-     * Заполняет поле "Email" в форме регистрации
-     *
-     * @param email Email адрес пользователя для регистрации
-     */
+    @Step("Заполнение поля 'Email': {email}")
     public void setEmail(String email) {
         setField(emailField, email);
     }
 
-    /**
-     * Заполняет поле "Пароль" в форме регистрации
-     *
-     * @param password Пароль пользователя для регистрации
-     */
+    @Step("Заполнение поля 'Пароль'")
     public void setPassword(String password) {
         setField(passwordField, password);
     }
 
     // Методы для взаимодействия с формой
 
-    /**
-     * Выполняет клик по кнопке "Зарегистрироваться" для отправки формы
-     */
+    @Step("Клик по кнопке 'Зарегистрироваться'")
     public void clickRegisterButton() {
         click(registerButton);
     }
 
-    /**
-     * Кликает по ссылке "Войти" для перехода на страницу авторизации
-     * Используется в тестах навигации между формами
-     */
+    @Step("Клик по ссылке 'Войти'")
     public void clickLoginLink() {
         click(loginLink);
     }
 
     // Композиционные методы
 
-    /**
-     * Выполняет полный процесс регистрации пользователя
-     * Заполняет все обязательные поля формы и отправляет её
-     *
-     * @param name Полное имя пользователя
-     * @param email Email адрес пользователя
-     * @param password Пароль пользователя
-     */
+    @Step("Регистрация пользователя: {name}, {email}")
     public void register(String name, String email, String password) {
         setName(name);
         setEmail(email);
@@ -98,14 +75,7 @@ public class RegisterPage extends BasePage {
 
     // Методы для работы с ошибками валидации
 
-    /**
-     * Получает текст сообщения об ошибке валидации с проверкой содержания
-     * Проверяет, что сообщение не пустое и содержит информацию о проблеме с паролем
-     * Используется в негативных тестах для проверки корректности валидации
-     *
-     * @return Текст сообщения об ошибке
-     * @throws AssertionError если сообщение об ошибке не отображается или не содержит нужную информацию
-     */
+    @Step("Получение сообщения об ошибке")
     public String getErrorMessage() {
         try {
             // Используем существующий метод waitForElement с коротким таймаутом
@@ -135,22 +105,14 @@ public class RegisterPage extends BasePage {
         }
     }
 
-    /**
-     * Проверяет, отображается ли сообщение об ошибке на странице
-     * Используется для быстрой проверки наличия ошибки без получения текста
-     *
-     * @return true если сообщение об ошибке отображается, иначе false
-     */
+    @Step("Проверка отображения сообщения об ошибке")
     public boolean isErrorMessageDisplayed() {
         return isElementVisible(errorMessage);
     }
 
     // Методы проверки состояния
 
-    /**
-     * Ожидает полной загрузки страницы регистрации
-     * Проверяет видимость кнопки регистрации как индикатора готовности формы
-     */
+    @Step("Ожидание загрузки страницы регистрации")
     public void waitForLoad() {
         waitForElement(registerButton);
     }

@@ -1,5 +1,6 @@
 package praktikum.pages;
 
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import praktikum.constants.Constants;
@@ -31,29 +32,19 @@ public class LoginPage extends BasePage {
 
     // Методы для работы с формой
 
-    /**
-     * Заполняет поле email/логина указанным значением
-     *
-     * @param email Email или логин пользователя для авторизации
-     */
+    @Step("Заполнение поля email: {email}")
     public void setEmail(String email) {
         System.out.println("Заполнение поля email: " + email);
         setField(emailField, email);
     }
 
-    /**
-     * Заполняет поле пароля указанным значением
-     *
-     * @param password Пароль пользователя для авторизации
-     */
+    @Step("Заполнение поля пароля")
     public void setPassword(String password) {
         System.out.println("Заполнение поля пароля");
         setField(passwordField, password);
     }
 
-    /**
-     * Выполняет клик по кнопке "Войти" для отправки формы
-     */
+    @Step("Клик по кнопке 'Войти'")
     public void clickLoginButton() {
         System.out.println("Клик по кнопке 'Войти'");
         click(loginButton);
@@ -61,17 +52,13 @@ public class LoginPage extends BasePage {
 
     // Методы для навигации
 
-    /**
-     * Кликает по ссылке "Зарегистрироваться" для перехода на страницу регистрации
-     */
+    @Step("Клик по ссылке 'Зарегистрироваться'")
     public void clickRegisterLink() {
         System.out.println("Клик по ссылке 'Зарегистрироваться'");
         click(registerLink);
     }
 
-    /**
-     * Кликает по ссылке "Восстановить пароль" для перехода на страницу восстановления
-     */
+    @Step("Клик по ссылке 'Восстановить пароль'")
     public void clickForgotPasswordLink() {
         System.out.println("Клик по ссылке 'Восстановить пароль'");
         click(forgotPasswordLink);
@@ -79,13 +66,7 @@ public class LoginPage extends BasePage {
 
     // Композиционные методы
 
-    /**
-     * Выполняет полный процесс авторизации пользователя
-     * Заполняет оба поля и отправляет форму
-     *
-     * @param email Email пользователя
-     * @param password Пароль пользователя
-     */
+    @Step("Авторизация пользователя: {email}")
     public void login(String email, String password) {
         System.out.println("Выполнение авторизации для пользователя: " + email);
         setEmail(email);
@@ -95,22 +76,14 @@ public class LoginPage extends BasePage {
 
     // Методы проверки состояния
 
-    /**
-     * Ожидает полной загрузки страницы авторизации
-     * Проверяет видимость заголовка формы как индикатора готовности
-     */
+    @Step("Ожидание загрузки страницы авторизации")
     public void waitForLoad() {
         System.out.println("Ожидание загрузки страницы авторизации...");
         waitForElement(loginFormTitle);
         System.out.println("Страница авторизации загружена");
     }
 
-    /**
-     * Проверяет, отображается ли страница авторизации в текущий момент
-     * Используется для подтверждения успешной навигации на страницу входа
-     *
-     * @return true если страница авторизации отображается, иначе false
-     */
+    @Step("Проверка отображения страницы авторизации")
     public boolean isDisplayed() {
         boolean displayed = isElementVisible(loginFormTitle);
         System.out.println("Страница авторизации отображается: " + displayed);
